@@ -1,0 +1,5 @@
+aiogram
+redis
+sqlalchemy
+celery
+celery-types
