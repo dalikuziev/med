@@ -3,3 +3,5 @@ redis
 sqlalchemy
 celery
 celery-types
+aiosqlite
+

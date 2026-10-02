@@ -8,12 +8,16 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from app.core.celery_app import celery_app
+# 1-O'ZGARISH: Navbatni bekor qilish callback'ini import qildik
+from app.bot.keyboards.appointment_keyboards import MyAppointmentCallback
+
 # O'zingizning DB URL va Bot tokeningizni qo'ying
-BOT_TOKEN = "SIZNING_BOT_TOKENINGIZ"
-DATABASE_URL = "sqlite+aiosqlite:///./med_queue.db"  # yoki postgresql+asyncpg://...
+BOT_TOKEN = "8863118900:AAHLLjvzsgAGeTdxaiybyvP4PAcgSnnXwQs"  # Shu yerga o'z tokeningizni qo'yish esdan chiqmasin!
+DATABASE_URL = "sqlite+aiosqlite:///./med_queue.db"
 
 engine = create_async_engine(DATABASE_URL)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
 
 async def _send_reminders_async():
     from app.db.models import Appointment
@@ -52,7 +56,7 @@ async def _send_reminders_async():
             except Exception:
                 pass
 
-        # 2 soat oldingi eslatma (Tasdiqlash/Bekor qilish tugmasi bilan)
+        # 2 soat oldingi eslatma
         stmt_2h = select(Appointment).where(
             and_(
                 Appointment.status == "confirmed",
@@ -61,15 +65,20 @@ async def _send_reminders_async():
         )
         res_2 = await session.execute(stmt_2h)
         for appt in res_2.scalars().all():
-            # Agar qabul vaqtiga taxminan 2 soat qolgan bo'lsa
             appt_datetime = datetime.combine(appt.appointment_date, appt.start_time)
             if target_2h_start <= appt_datetime <= target_2h_end:
+
+                # 2-O'ZGARISH: "Kela olmayman" tugmasini bizning tizimga ulab qo'ydik
                 kb = InlineKeyboardMarkup(inline_keyboard=[
                     [
                         InlineKeyboardButton(text="✅ Boraman", callback_data=f"confirm_arrival_{appt.id}"),
-                        InlineKeyboardButton(text="❌ Kela olmayman", callback_data=f"appt:cancel:{appt.id}")
+                        InlineKeyboardButton(
+                            text="❌ Kela olmayman",
+                            callback_data=MyAppointmentCallback(app_id=appt.id, action="cancel").pack()
+                        )
                     ]
                 ])
+
                 try:
                     await bot.send_message(
                         chat_id=appt.user_id,
@@ -85,7 +94,9 @@ async def _send_reminders_async():
 
     await bot.session.close()
 
+
 @celery_app.task
 def send_appointment_reminders():
     """Celery chaqiradigan sinxron qobiq"""
+    print("🚀 Celery: Bazadagi navbatlar eslatma uchun tekshirilmoqda...")
     asyncio.run(_send_reminders_async())

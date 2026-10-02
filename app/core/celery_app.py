@@ -4,7 +4,8 @@ from celery import Celery
 celery_app = Celery(
     "med_tasks",
     broker="redis://localhost:6379/1",
-    backend="redis://localhost:6379/1"
+    backend="redis://localhost:6379/1",
+    include=["app.tasks.reminder_tasks"],
 )
 
 celery_app.conf.update(

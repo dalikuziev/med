@@ -1,9 +1,25 @@
 .env
 __pycache__/
 *.py[cod]
-db.sqlite3
+
+# Ma'lumotlar bazasi
+*.db
+*.sqlite3
+
+# Celery
+celerybeat-schedule*
+*.pid
+
+# Virtual muhit
+.venv/
+venv/
+env/
+
+# Media va loglar
 media/
 *.log
+
+# IDE va OS fayllari
 .idea/
 .vscode/
 .DS_Store

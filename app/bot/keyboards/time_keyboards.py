@@ -8,7 +8,7 @@ class DateSelectCallback(CallbackData, prefix="sel_date"):
     date_str: str
 
 
-class SlotSelectCallback(CallbackData, prefix="sel_slot"):
+class SlotSelectCallback(CallbackData, prefix="sel_slot", sep="-"):
     time_str: str
 
 
